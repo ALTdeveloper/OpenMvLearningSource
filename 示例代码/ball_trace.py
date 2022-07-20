@@ -26,26 +26,20 @@ s2 = Servo(2) # P8上下y
 s1.pulse_width(int(xmax/2))
 s2.pulse_width(int(ymax/2))
 
-class mv_pid:
+class Mv_PID:
     #自定义的通用位置式pid类
     def __init__(self,p,i,d,imax):
         self.p = p
-        self,i = i
+        self.i = i
         self.d = d
-        self.imax = imax
-        err = 0
-        err_last = 0
-        err_lastest = 0
-        erri = 0#积分err
+        self.imax = imax#积分限幅
+        self.err_last = 0
+        self.err_lastest = 0
+        self.erri = 0#积分err
 
-#y_PID参数声明
-err_last = 0
-err_lastest = 0
-imax = 10#积分限幅
-erri = 0#积分err
-pid_p = 2.5#2
-pid_i = 0#
-pid_d = 0.17#
+#PID参数声明
+x_pid = Mv_PID(2.5,0,0.17,10)#2.5,0,0.17,10
+y_pid = Mv_PID(2.5,0,0.17,10)#2.5,0,0.17,10
 
 def color_judge(l,a,b,color):
     if (l > color[0] and l < color[1]):
@@ -55,13 +49,12 @@ def color_judge(l,a,b,color):
     return False
 
 #位置式pid
-def pid(err):
-    global err_last, err_lastest, erri
-    pidout = pid_p * err + pid_i * erri + pid_d * err-2*err_last+err_lastest
-    if (erri+err < imax and erri+err > -imax):
-        erri = erri+err
-    err_lastest = err_last
-    err_last = err
+def pid(err,obj):
+    pidout = obj.p * err + obj.i * obj.erri + obj.d * err - 2*obj.err_last + obj.err_lastest
+    if (obj.erri+err < obj.imax and obj.erri+err > -obj.imax):
+        obj.erri = obj.erri+err
+    obj.err_lastest = obj.err_last
+    obj.err_last = err
     return pidout
 
 def servo_diffmove(x,y):
@@ -95,5 +88,5 @@ while(True):
         img.draw_cross(t_ball.x(),t_ball.y(),color=(255,0,0))
         img.draw_line(t_ball.x(),t_ball.y(),x_mid,y_mid,color=(0,0,255))
         print(t_ball.x(),t_ball.y())
-        servo_diffmove(x_mid,pid(yerr))
+        servo_diffmove(pid(xerr,x_pid),pid(yerr,y_pid))
 
